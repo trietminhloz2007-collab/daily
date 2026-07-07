@@ -40,6 +40,8 @@ Trường không cấp Blackboard Learn REST API cho sinh viên, nên dùng scra
 
 ### 4. Tổng hợp báo cáo
 Gộp 3 phần trên thành một bản tóm tắt ngắn gọn (Markdown), ưu tiên các mục có deadline gần nhất lên đầu.
+Với Blackboard, mỗi announcement đều có trường `course` (lấy từ "Posted to:") — **luôn hiển thị tên môn
+học làm nhãn chính** (ví dụ "Physics 2"), người đăng (`posted_by`) chỉ ghi kèm phụ, không đặt lên đầu.
 Gửi báo cáo bằng cách tạo Gmail draft tới chính người dùng (`mcp__Gmail__create_draft`) hoặc in trực tiếp
 trong session nếu Routine chạy vào session hiện tại.
 

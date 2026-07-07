@@ -84,10 +84,16 @@ def list_announcements():
         title_m = re.search(r'<h3[^>]*>\s*(.*?)\s*</h3>', block, re.S)
         posted_m = re.search(r'Posted on:\s*([^<]+)</span>', block)
         by_m = re.search(r'Posted by:</span>\s*([^<]+)', block)
+        to_m = re.search(r'Posted to:</span>\s*([^<]+)', block)
         if not title_m:
             continue
+        course_raw = to_m.group(1).strip() if to_m else "Everyone"
+        # Course names look like "Physics 2_S3_2025-26_G01" — keep just the
+        # human-readable subject name for report headers.
+        course = re.sub(r"_S\d.*$", "", course_raw).strip() or course_raw
         items.append({
             "id": item_id,
+            "course": course,
             "title": re.sub(r"\s+", " ", title_m.group(1)).strip(),
             "posted_on": posted_m.group(1).strip() if posted_m else "",
             "posted_by": by_m.group(1).strip() if by_m else "",
