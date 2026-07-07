@@ -22,6 +22,9 @@ BASE = "https://blackboard.hcmiu.edu.vn"
 
 _ca_bundle = "/root/.ccr/ca-bundle.crt"
 _ctx = ssl.create_default_context(cafile=_ca_bundle if os.path.exists(_ca_bundle) else None)
+# HCMIU's Blackboard server only offers legacy ciphers (e.g. DHE-RSA-AES128-SHA);
+# OpenSSL 3.x's default security level rejects those unless lowered.
+_ctx.set_ciphers("DEFAULT@SECLEVEL=1")
 _proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
 
 _jar = http.cookiejar.CookieJar()
@@ -70,16 +73,26 @@ def login(username: str, password: str):
 
 
 def list_announcements():
-    """Scrape the classic 'My Announcements' module on the portal homepage."""
-    html = get(f"{BASE}/webapps/portal/execute/tabs/tabAction?tab_tab_group_id=_1_1")
+    """Scrape 'My Announcements' — real course/system announcements, not nav links."""
+    html = get(
+        f"{BASE}/webapps/blackboard/execute/announcement"
+        f"?method=search&context=mybb&handle=my_announcements"
+    )
     items = []
-    for m in re.finditer(r'<a[^>]+href="([^"]+)"[^>]*>([^<]{3,150})</a>', html):
-        href, text = m.groups()
-        text = text.strip()
-        if not text or "javascript:" in href:
+    for li in re.finditer(r'<li class="clearfix"\s+id="([^"]+)">(.*?)</li>', html, re.S):
+        item_id, block = li.groups()
+        title_m = re.search(r'<h3[^>]*>\s*(.*?)\s*</h3>', block, re.S)
+        posted_m = re.search(r'Posted on:\s*([^<]+)</span>', block)
+        by_m = re.search(r'Posted by:</span>\s*([^<]+)', block)
+        if not title_m:
             continue
-        items.append({"title": text, "url": href if href.startswith("http") else f"{BASE}{href}"})
-    return items[:30]
+        items.append({
+            "id": item_id,
+            "title": re.sub(r"\s+", " ", title_m.group(1)).strip(),
+            "posted_on": posted_m.group(1).strip() if posted_m else "",
+            "posted_by": by_m.group(1).strip() if by_m else "",
+        })
+    return items
 
 
 def main():
