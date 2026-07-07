@@ -8,11 +8,21 @@ Prints a JSON list of {"from": str, "subject": str, "preview": str, "received": 
 """
 import json
 import os
+import ssl
 import sys
+import urllib.error
 import urllib.request
 import urllib.parse
 
 GRAPH_BASE = "https://graph.microsoft.com/v1.0"
+
+_ca_bundle = "/root/.ccr/ca-bundle.crt"
+_ctx = ssl.create_default_context(cafile=_ca_bundle if os.path.exists(_ca_bundle) else None)
+_proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
+_handlers = [urllib.request.HTTPSHandler(context=_ctx)]
+if _proxy:
+    _handlers.append(urllib.request.ProxyHandler({"https": _proxy, "http": _proxy}))
+_opener = urllib.request.build_opener(*_handlers)
 
 
 def get_access_token() -> str:
@@ -29,7 +39,7 @@ def get_access_token() -> str:
         data=data,
         method="POST",
     )
-    with urllib.request.urlopen(req) as resp:
+    with _opener.open(req) as resp:
         return json.load(resp)["access_token"]
 
 
@@ -45,7 +55,7 @@ def fetch_unread(token: str, hours: int = 24):
         f"{GRAPH_BASE}/me/mailFolders/inbox/messages?{params}",
         headers={"Authorization": f"Bearer {token}"},
     )
-    with urllib.request.urlopen(req) as resp:
+    with _opener.open(req) as resp:
         payload = json.load(resp)
     results = []
     for msg in payload.get("value", []):
