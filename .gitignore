@@ -1,0 +1,3 @@
+# Blackboard session state (contains real login cookies)
+blackboard_state.json
+.config/daily-report/
