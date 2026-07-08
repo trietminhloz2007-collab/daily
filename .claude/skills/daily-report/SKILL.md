@@ -38,6 +38,16 @@ Trường không cấp Blackboard Learn REST API cho sinh viên, nên dùng scra
 - Sau khi đăng nhập, vào trang "To-Do" / "Calendar" (Ultra) của Blackboard, lấy danh sách các mục có hạn
   trong 7 ngày tới, in ra JSON: `[{course, title, due_date, url}]`.
 
+### 3.5. So sánh với báo cáo lần trước (tránh báo trùng)
+Trước khi tổng hợp, đọc file trạng thái `~/.config/daily-report/last_state.json` (nếu có) — chứa
+`{"gmail_thread_ids": [...], "blackboard_ids": [...], "date": "..."}` của lần chạy trước.
+- Nếu Gmail không có thread ID nào mới so với `gmail_thread_ids` đã lưu → ghi "Gmail: không có gì mới
+  cho ngày {hôm nay}" thay vì liệt kê lại các thread cũ.
+- Tương tự với Blackboard: nếu không có `id` nào mới so với `blackboard_ids` đã lưu → ghi "Blackboard:
+  không có gì mới cho ngày {hôm nay}".
+- Sau khi tổng hợp xong, ghi đè file `last_state.json` với danh sách ID mới nhất của lần chạy này (kèm
+  ngày) để lần sau so sánh. File này không nằm trong repo (thuộc `~/.config`, không commit).
+
 ### 4. Tổng hợp báo cáo
 Gộp 3 phần trên thành một bản tóm tắt ngắn gọn (Markdown), ưu tiên các mục có deadline gần nhất lên đầu.
 Với Blackboard, mỗi announcement đều có trường `course` (lấy từ "Posted to:") — **luôn hiển thị tên môn
