@@ -38,6 +38,19 @@ Trường không cấp Blackboard Learn REST API cho sinh viên, nên dùng scra
 - Sau khi đăng nhập, vào trang "To-Do" / "Calendar" (Ultra) của Blackboard, lấy danh sách các mục có hạn
   trong 7 ngày tới, in ra JSON: `[{course, title, due_date, url}]`.
 
+### 3.4. Blackboard — "chuông" thông báo (What's New: nội dung mới, điểm mới)
+Ngoài Announcements, Blackboard có mục "chuông" (bell icon, góc phải trên) hiển thị nội dung mới đăng
+và điểm mới — mục này dùng công nghệ DWR nội bộ không an toàn để scrape trực tiếp. Thay vào đó, dùng
+`scripts/blackboard_updates.py` (cùng credentials `BLACKBOARD_USERNAME`/`BLACKBOARD_PASSWORD`), lấy
+qua REST API chính thức: với mỗi môn đang học, liệt kê nội dung (bài giảng, tài liệu, bài tập) kèm thời
+điểm "modified", và điểm số (khi đã được chấm). Script in ra JSON list
+`[{"course","type":"content"|"grade","title","id","value"}]`.
+So sánh `id`+`value` với file trạng thái riêng `~/.config/daily-report/blackboard_signal_state.json`
+({id: value}) từ lần chạy trước — mục nào có `id` mới hoặc `value` thay đổi thì là mục mới/cập nhật.
+Sắp xếp theo thời gian đăng giảm dần, lấy tối đa 10 mục mới nhất để báo cáo. Nếu không có mục nào mới/
+thay đổi → ghi "Blackboard (chuông thông báo): không có gì mới cho ngày {hôm nay}". Sau khi báo cáo
+xong, ghi đè `blackboard_signal_state.json` với toàn bộ `{id: value}` của lần chạy này.
+
 ### 3.5. So sánh với báo cáo lần trước (tránh báo trùng)
 Trước khi tổng hợp, đọc file trạng thái `~/.config/daily-report/last_state.json` (nếu có) — chứa
 `{"gmail_thread_ids": [...], "blackboard_ids": [...], "date": "..."}` của lần chạy trước.
