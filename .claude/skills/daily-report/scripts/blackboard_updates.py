@@ -94,7 +94,7 @@ def walk_contents(course_id, content_id, out, depth=0):
         return
     try:
         data = get_json(f"{BASE}/learn/api/public/v1/courses/{course_id}/contents/{content_id}/children")
-    except urllib.error.HTTPError:
+    except urllib.error.URLError:
         return
     for item in data.get("results", []):
         out.append({
@@ -110,7 +110,7 @@ def get_content_signals(course_id):
     out = []
     try:
         top = get_json(f"{BASE}/learn/api/public/v1/courses/{course_id}/contents")
-    except urllib.error.HTTPError:
+    except urllib.error.URLError:
         return out
     for item in top.get("results", []):
         out.append({
@@ -127,7 +127,7 @@ def get_grade_signals(course_id, user_id):
     out = []
     try:
         columns = get_json(f"{BASE}/learn/api/public/v2/courses/{course_id}/gradebook/columns")
-    except urllib.error.HTTPError:
+    except urllib.error.URLError:
         return out
     for col in columns.get("results", []):
         if col.get("grading", {}).get("type") == "Calculated":
@@ -137,7 +137,7 @@ def get_grade_signals(course_id, user_id):
             grade = get_json(
                 f"{BASE}/learn/api/public/v2/courses/{course_id}/gradebook/columns/{col_id}/users/{user_id}"
             )
-        except urllib.error.HTTPError:
+        except urllib.error.URLError:
             continue
         out.append({
             "id": col_id,
@@ -172,7 +172,7 @@ def main():
         try:
             course = get_json(f"{BASE}/learn/api/public/v3/courses/{course_id}")
             course_name = course.get("name", course_id)
-        except urllib.error.HTTPError:
+        except urllib.error.URLError:
             course_name = course_id
 
         for c in get_content_signals(course_id):
