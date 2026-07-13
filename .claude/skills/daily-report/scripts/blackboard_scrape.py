@@ -79,8 +79,16 @@ def list_announcements():
         f"?method=search&context=mybb&handle=my_announcements"
     )
     items = []
-    for li in re.finditer(r'<li class="clearfix"\s+id="([^"]+)">(.*?)</li>', html, re.S):
-        item_id, block = li.groups()
+    # Split on <li class="clearfix" id="..."> boundaries rather than matching
+    # to the first </li> — an announcement's own body can contain nested
+    # <li> tags (e.g. bullet lists), which would otherwise truncate the block
+    # before "Posted by/Posted to" and silently drop that info.
+    starts = list(re.finditer(r'<li class="clearfix"\s+id="([^"]+)">', html))
+    for i, m in enumerate(starts):
+        item_id = m.group(1)
+        block_start = m.end()
+        block_end = starts[i + 1].start() if i + 1 < len(starts) else len(html)
+        block = html[block_start:block_end]
         title_m = re.search(r'<h3[^>]*>\s*(.*?)\s*</h3>', block, re.S)
         posted_m = re.search(r'Posted on:\s*([^<]+)</span>', block)
         by_m = re.search(r'Posted by:</span>\s*([^<]+)', block)
